@@ -1,0 +1,56 @@
+name: PR merge Reminder
+on:
+  pull_request:
+    branches: [main, master, 'release/**']
+    types: [opened, reopened]
+  pull_request_review:
+    branches: [main, master, 'release/**']
+    types: [ submitted ]
+
+jobs:
+  pr-on:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open release branch
+      if: ${{ startsWith(github.base_ref, 'release/') }}
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          개발자 친구들~ release 브랜치에는 `Squsah and Merge` 해야쥬 🚀 <br>
+          <img alt="main-merge.png" src="이미지 URL">
+
+      - name: Open main(master) branch
+        if: ${{ contains(fromJSON('["main", "master"]'), github.base_ref) }}
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            개발자 친구들~ master(main) 브랜치에는 `Merge commit`을 해야쥬 🚀 <br>
+            <img alt="main-merge.png" src="이미지 URL">
+
+check-main-approve:
+  if: github.event.review.state == 'approved' && contains(fromJSON('["main", "master"]'), github.event.pull_request.base.ref)
+  runs-on: ubuntu-latest
+  steps:
+    - name: Approve main(master) breanch
+    uses: peter-evans/create-or-update-comment@v3
+    with:
+      issue-number: ${{ github.event.pull_request.number }}
+      body: |
+        ${{ github.actor }} 님이 approve 하셨네요!! 우린 이제 한배를 탄겨!
+        아참 그리고!! master(main) 브랜치에는 `Merge commit`을 해야쥬 🚀 <br>
+        <img alt="main-merge.png" src="이미지 URL">
+
+check-release-approve:
+  if: github.event.review.state == 'approved' && startsWith(github.event.pull_request.base.ref, 'release/')
+  runs-on: ubuntu-latest
+  steps:
+    - name: Approve release breanch
+      uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ${{ github.actor }} 님이 approve 하셨네요!! 우린 이제 한배를 탄겨!
+          아참 그리고!! release 브랜치에는 `Squsah and Merge` 해야쥬 🚀 <br>
+          <img alt="main-merge.png" src="이미지 URL">
